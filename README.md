@@ -26,6 +26,11 @@ Expected extracted structure:
 /content/hw3_data/
 ├── train/
 └── test_release/
+
+Place swin_colab.py in:
+
+/content/drive/MyDrive/vis_hw3/
+
 ### 2. Install Dependencies
 
 The notebook VIS_hw3.ipynb contains the full setup commands.
@@ -106,10 +111,7 @@ The JSON follows the required format:
   }
 ]
 Performance Snapshot
-Model	Validation AP50	Competition AP
-Mask R-CNN + ResNet-50	0.470	0.350
-Mask R-CNN + Swin-T	0.612	0.471
-Swin-T + Modified Mask Head	0.683	0.465
+![alt text](image.png)
 
 Main findings:
 

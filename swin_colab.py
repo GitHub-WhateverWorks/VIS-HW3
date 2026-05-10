@@ -14,7 +14,6 @@ import tifffile
 from pycocotools import mask as mask_utils
 from mmdet.apis import init_detector
 
-
 DATA_DIR = Path("/content/hw3_data")
 TRAIN_ROOT = DATA_DIR / "train"
 TEST_ROOT = DATA_DIR / "test_release"
@@ -76,7 +75,10 @@ def run_cmd(cmd: List[str]) -> None:
 
 
 def get_mmdet_tool(name: str) -> Path:
-    tool = Path(sys.executable).parent.parent / f"lib/python3.10/site-packages/mmdet/.mim/tools/{name}.py"
+    tool = (
+        Path(sys.executable).parent.parent
+        / f"lib/python3.10/site-packages/mmdet/.mim/tools/{name}.py"
+    )
     if not tool.exists():
         raise FileNotFoundError(f"Cannot find MMDetection tool: {tool}")
     return tool
@@ -145,10 +147,13 @@ def print_model_stats(model) -> None:
     print("=" * 80, flush=True)
 
     if trainable >= 200_000_000:
-        raise RuntimeError(f"Trainable params exceed 200M: {trainable / 1e6:.2f}M")
+        raise RuntimeError(f"Trainable params exceed 200M: \
+                           {trainable / 1e6:.2f}M")
 
 
-def build_records(train_root: Path, min_area: int = MIN_MASK_AREA) -> List[Dict[str, Any]]:
+def build_records(
+    train_root: Path, min_area: int = MIN_MASK_AREA
+) -> List[Dict[str, Any]]:
     records: List[Dict[str, Any]] = []
     sample_dirs = sorted([p for p in train_root.iterdir() if p.is_dir()])
 
@@ -157,7 +162,10 @@ def build_records(train_root: Path, min_area: int = MIN_MASK_AREA) -> List[Dict[
 
     for si, sample_dir in enumerate(sample_dirs, start=1):
         if si == 1 or si % 20 == 0 or si == len(sample_dirs):
-            print(f"building COCO {si}/{len(sample_dirs)}: {sample_dir.name}", flush=True)
+            print(
+                f"building COCO {si}/{len(sample_dirs)}: \
+                    {sample_dir.name}", flush=True
+            )
 
         img_path = sample_dir / "image.tif"
         if not img_path.exists():
@@ -197,15 +205,17 @@ def build_records(train_root: Path, min_area: int = MIN_MASK_AREA) -> List[Dict[
                 if area < min_area:
                     continue
 
-                rec["annotations"].append({
-                    "id": ann_id,
-                    "image_id": image_id,
-                    "category_id": class_id,
-                    "bbox": binary_mask_to_bbox(binary),
-                    "area": float(area),
-                    "segmentation": encode_binary_mask(binary),
-                    "iscrowd": 0,
-                })
+                rec["annotations"].append(
+                    {
+                        "id": ann_id,
+                        "image_id": image_id,
+                        "category_id": class_id,
+                        "bbox": binary_mask_to_bbox(binary),
+                        "area": float(area),
+                        "segmentation": encode_binary_mask(binary),
+                        "iscrowd": 0,
+                    }
+                )
                 ann_id += 1
 
         records.append(rec)
@@ -219,17 +229,20 @@ def records_to_coco(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     annotations = []
 
     for rec in records:
-        images.append({
-            "id": int(rec["image_id"]),
-            "file_name": rec["file_name"],
-            "height": int(rec["height"]),
-            "width": int(rec["width"]),
-        })
+        images.append(
+            {
+                "id": int(rec["image_id"]),
+                "file_name": rec["file_name"],
+                "height": int(rec["height"]),
+                "width": int(rec["width"]),
+            }
+        )
 
         for ann in rec["annotations"]:
             annotations.append(dict(ann))
 
-    categories = [{"id": i + 1, "name": name} for i, name in enumerate(CLASS_NAMES)]
+    categories = [{"id": i + 1, "name": name} for i,
+                  name in enumerate(CLASS_NAMES)]
 
     return {
         "images": images,
@@ -262,8 +275,15 @@ def prepare_coco_dataset() -> None:
     print(f"Total images:     {len(records)}", flush=True)
     print(f"Train images:     {len(train_records)}", flush=True)
     print(f"Val images:       {len(val_records)}", flush=True)
-    print(f"Train instances:  {sum(len(r['annotations']) for r in train_records)}", flush=True)
-    print(f"Val instances:    {sum(len(r['annotations']) for r in val_records)}", flush=True)
+    print(
+        f"Train instances:  \
+            {sum(len(r['annotations']) for r in train_records)}",
+        flush=True,
+    )
+    print(
+        f"Val instances:    {sum(len(r['annotations']) for r in val_records)}",
+        flush=True,
+    )
     print(f"Train JSON:       {TRAIN_JSON}", flush=True)
     print(f"Val JSON:         {VAL_JSON}", flush=True)
     print("=" * 80, flush=True)
@@ -272,7 +292,7 @@ def prepare_coco_dataset() -> None:
 def write_swin_config() -> None:
     persistent_workers = "False" if NUM_WORKERS == 0 else "True"
 
-    cfg = f'''
+    cfg = f"""
 _base_ = "mmdet::swin/mask-rcnn_swin-t-p4-w7_fpn_1x_coco.py"
 
 num_classes = {NUM_CLASSES}
@@ -332,7 +352,9 @@ val_pipeline = [
     dict(type="LoadAnnotations", with_bbox=True, with_mask=True),
     dict(
         type="PackDetInputs",
-        meta_keys=("img_id", "img_path", "ori_shape", "img_shape", "scale_factor"),
+        meta_keys=("img_id",
+          "img_path",
+          "ori_shape", "img_shape", "scale_factor"),
     ),
 ]
 
@@ -341,7 +363,9 @@ test_pipeline = [
     dict(type="Resize", scale=(640, {IMG_SCALE_LONG}), keep_ratio=True),
     dict(
         type="PackDetInputs",
-        meta_keys=("img_id", "img_path", "ori_shape", "img_shape", "scale_factor"),
+        meta_keys=("img_id",
+          "img_path",
+          "ori_shape", "img_shape", "scale_factor"),
     ),
 ]
 
@@ -393,13 +417,16 @@ val_evaluator = dict(
 
 test_evaluator = val_evaluator
 
-train_cfg = dict(type="EpochBasedTrainLoop", max_epochs={NUM_EPOCHS}, val_interval=1)
+train_cfg = dict(type="EpochBasedTrainLoop",
+ max_epochs={NUM_EPOCHS}, val_interval=1)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 
 optim_wrapper = dict(
     type="OptimWrapper",
-    optimizer=dict(type="AdamW", lr={BASE_LR}, betas=(0.9, 0.999), weight_decay=0.05),
+    optimizer=dict(type="AdamW",
+      lr={BASE_LR},
+      betas=(0.9, 0.999), weight_decay=0.05),
     paramwise_cfg=dict(
         custom_keys={{
             "absolute_pos_embed": dict(decay_mult=0.0),
@@ -411,7 +438,8 @@ optim_wrapper = dict(
 )
 
 param_scheduler = [
-    dict(type="LinearLR", start_factor=0.001, by_epoch=False, begin=0, end=500),
+    dict(type="LinearLR",
+      start_factor=0.001, by_epoch=False, begin=0, end=500),
     dict(
         type="CosineAnnealingLR",
         eta_min=1e-7,
@@ -438,7 +466,7 @@ work_dir = "{str(WORK_DIR.resolve())}"
 
 randomness = dict(seed={SEED}, deterministic=False)
 env_cfg = dict(cudnn_benchmark=True)
-'''
+"""
 
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         f.write(cfg)
@@ -465,14 +493,17 @@ def write_test_coco() -> None:
         if not img_path.exists():
             raise FileNotFoundError(img_path)
 
-        images.append({
-            "id": image_id,
-            "file_name": str(img_path.resolve()),
-            "height": h,
-            "width": w,
-        })
+        images.append(
+            {
+                "id": image_id,
+                "file_name": str(img_path.resolve()),
+                "height": h,
+                "width": w,
+            }
+        )
 
-    categories = [{"id": i + 1, "name": name} for i, name in enumerate(CLASS_NAMES)]
+    categories = [{"id": i + 1, "name": name} for i,
+                  name in enumerate(CLASS_NAMES)]
 
     test_coco = {
         "images": images,
@@ -496,7 +527,7 @@ def write_infer_config(checkpoint: Path) -> Path:
     output_prefix = SWIN_DIR / "submission_raw"
     persistent_workers = "False" if NUM_WORKERS == 0 else "True"
 
-    cfg = f'''
+    cfg = f"""
 _base_ = "{str(CONFIG_PATH.resolve())}"
 
 load_from = "{str(checkpoint.resolve())}"
@@ -507,7 +538,7 @@ model = dict(
             score_thr={SCORE_THRESH},
             nms=dict(type="nms", iou_threshold={NMS_IOU_THRESH}),
             max_per_img={MAX_DETECTIONS_PER_IMAGE},
-            mask_thr_binary={MASK_THRESH},  
+            mask_thr_binary={MASK_THRESH},
         )
     )
 )
@@ -517,7 +548,8 @@ test_pipeline = [
     dict(type="Resize", scale=(768, 1280), keep_ratio=True),
     dict(
         type="PackDetInputs",
-        meta_keys=("img_id", "img_path", "ori_shape", "img_shape", "scale_factor"),
+        meta_keys=("img_id",
+          "img_path", "ori_shape", "img_shape", "scale_factor"),
     ),
 ]
 
@@ -547,7 +579,7 @@ test_evaluator = dict(
     outfile_prefix="{str(output_prefix.resolve())}",
     backend_args=None,
 )
-'''
+"""
 
     with open(infer_config, "w", encoding="utf-8") as f:
         f.write(cfg)
@@ -569,35 +601,41 @@ def train() -> None:
 
     train_tool = get_mmdet_tool("train")
 
-    run_cmd([
-        sys.executable,
-        str(train_tool),
-        str(CONFIG_PATH),
-        "--work-dir",
-        str(WORK_DIR),
-    ])
+    run_cmd(
+        [
+            sys.executable,
+            str(train_tool),
+            str(CONFIG_PATH),
+            "--work-dir",
+            str(WORK_DIR),
+        ]
+    )
 
 
 def infer() -> None:
     write_test_coco()
-
-    checkpoint = resolve_checkpoint(WORK_DIR / "best_coco_segm_mAP_50_epoch_*.pth")
+    checkpoint = resolve_checkpoint(
+        WORK_DIR / "best_coco_segm_mAP_50_epoch_*.pth"
+    )
     infer_config = write_infer_config(checkpoint)
     test_tool = get_mmdet_tool("test")
 
-    run_cmd([
-        sys.executable,
-        str(test_tool),
-        str(infer_config),
-        str(checkpoint),
-    ])
+    run_cmd(
+        [
+            sys.executable,
+            str(test_tool),
+            str(infer_config),
+            str(checkpoint),
+        ]
+    )
 
     segm_json = SWIN_DIR / "submission_raw.segm.json"
     bbox_json = SWIN_DIR / "submission_raw.bbox.json"
 
     if not segm_json.exists():
         candidates = sorted(SWIN_DIR.glob("submission_raw*.json"))
-        raise FileNotFoundError(f"Cannot find {segm_json}. Candidates: {candidates}")
+        raise FileNotFoundError(f"Cannot find {segm_json}.\
+                                 Candidates: {candidates}")
 
     with open(segm_json, "r", encoding="utf-8") as f:
         segm_results = json.load(f)
@@ -616,16 +654,18 @@ def infer() -> None:
 
             seg = r["segmentation"]
 
-            final_results.append({
-                "image_id": int(r["image_id"]),
-                "bbox": [float(x) for x in r["bbox"]],
-                "score": float(r["score"]),
-                "category_id": int(r["category_id"]),
-                "segmentation": {
-                    "size": [int(x) for x in seg["size"]],
-                    "counts": seg["counts"],
-                },
-            })
+            final_results.append(
+                {
+                    "image_id": int(r["image_id"]),
+                    "bbox": [float(x) for x in r["bbox"]],
+                    "score": float(r["score"]),
+                    "category_id": int(r["category_id"]),
+                    "segmentation": {
+                        "size": [int(x) for x in seg["size"]],
+                        "counts": seg["counts"],
+                    },
+                }
+            )
 
     else:
         if len(bbox_results) != len(segm_results):
@@ -637,16 +677,18 @@ def infer() -> None:
         for b, s in zip(bbox_results, segm_results):
             seg = s["segmentation"]
 
-            final_results.append({
-                "image_id": int(s["image_id"]),
-                "bbox": [float(x) for x in b["bbox"]],
-                "score": float(s["score"]),
-                "category_id": int(s["category_id"]),
-                "segmentation": {
-                    "size": [int(x) for x in seg["size"]],
-                    "counts": seg["counts"],
-                },
-            })
+            final_results.append(
+                {
+                    "image_id": int(s["image_id"]),
+                    "bbox": [float(x) for x in b["bbox"]],
+                    "score": float(s["score"]),
+                    "category_id": int(s["category_id"]),
+                    "segmentation": {
+                        "size": [int(x) for x in seg["size"]],
+                        "counts": seg["counts"],
+                    },
+                }
+            )
 
     with open(SUBMISSION_JSON, "w", encoding="utf-8") as f:
         json.dump(final_results, f)
@@ -666,15 +708,19 @@ def val() -> None:
     if not CONFIG_PATH.exists():
         raise FileNotFoundError(f"Cannot find config: {CONFIG_PATH}")
 
-    checkpoint = resolve_checkpoint(WORK_DIR / "best_coco_segm_mAP_50_epoch_*.pth")
+    checkpoint = resolve_checkpoint(
+        WORK_DIR / "best_coco_segm_mAP_50_epoch_*.pth"
+    )
     test_tool = get_mmdet_tool("test")
 
-    run_cmd([
-        sys.executable,
-        str(test_tool),
-        str(CONFIG_PATH),
-        str(checkpoint),
-    ])
+    run_cmd(
+        [
+            sys.executable,
+            str(test_tool),
+            str(CONFIG_PATH),
+            str(checkpoint),
+        ]
+    )
 
 
 def show_best() -> None:
@@ -724,7 +770,8 @@ def main() -> None:
     elif mode == "show_best":
         show_best()
     else:
-        raise ValueError("Usage: python swin_colab.py [train|infer|val|show_best]")
+        raise ValueError("Usage: python swin_colab.py\
+                          [train|infer|val|show_best]")
 
 
 if __name__ == "__main__":

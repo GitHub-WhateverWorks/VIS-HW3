@@ -52,7 +52,7 @@ drive.mount("/content/drive")
 Then run the setup cells in VIS_hw3.ipynb.
 
 Usage
-1. Train
+#### 1. Train
 
 Run:
 
@@ -78,7 +78,7 @@ output_exp/swin/coco/instances_val.json
 output_exp/swin/_runtime_swin_config.py
 output_exp/swin/work/
 
-2. Inference
+#### 2. Inference
 
 Run:
 

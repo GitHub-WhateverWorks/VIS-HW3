@@ -96,20 +96,6 @@ Expected output:
 
 output_exp/swin/submission.json
 
-The JSON follows the required format:
-
-[
-  {
-    "image_id": 1,
-    "bbox": [x, y, width, height],
-    "score": 0.56789,
-    "category_id": 1,
-    "segmentation": {
-      "size": [height, width],
-      "counts": "encoded_rle_string"
-    }
-  }
-]
 Performance Snapshot
 ![alt text](image.png)
 
